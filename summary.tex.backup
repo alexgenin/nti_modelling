@@ -1,0 +1,155 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{amsmath}
+
+\usepackage{rotating}
+
+\input{/home/alex/docs/resources/latex_include.tex}
+\usepackage[french]{babel}
+
+\usepackage{geometry}
+\geometry{
+  left   = 24mm,
+  right  = 24mm,
+  top    = 24mm,
+  bottom = 24mm,
+}
+
+
+% bib
+\usepackage[style=numeric-comp,
+            doi=false,
+            url=false]{biblatex}
+\bibliography{/home/alex/docs/resources/latex/library.bib}
+
+%opening
+\title{Non-trophic interactions: consequences on secondary extinctions}
+\author{Alexandre Génin}
+
+\begin{document}
+  
+  \maketitle 
+  
+  The plan is to investigate the impact of non-trophic interactions on the 
+number of secondary extinctions. We thus define a trophic model of population 
+dynamics and then add non-trophic interactions. 
+    
+  \section{The trophic model}
+      
+      \SCfig{trophic_topology.png}{
+        The fixed trophic topology: 4 basal producers, 2 grazers and 2 
+        consumers. Species consume everyone on the lower trophic level.
+        x-axis has no meaning.}{.6}
+      
+      The dynamic model is inspired from Brose et al's (2006). It is given by 
+its main equation that describes the dynamics of one species' biomass: 
+    
+    \begin{equation}
+      \frac{dB_i}{dt} =   r_iB_i(1 - \frac{B_i}{K_i}) 
+                        + \sum_{i=1}^{i=N} B_i w_{ij} F_{ij} 
+                        - \sum_{j=1}^{i=N} B_j w_{ji} F_{ji} / e_{ji} 
+                        - x_i B_i 
+    \end{equation}
+    
+    where $F_{ij}$ describes a generic functional response in which species $i$ 
+    feeds on $j$: 
+    
+    \begin{equation}
+      F_{ij} = \frac{a_{ij} w_{ij} B_{j}^{q+1} }{ 
+        1 + h_{i} w_{ij} \sum_{k=preys} a_{ik} B_{k}^{q+1} }
+    \end{equation}
+    
+    where q is a coefficient comprised between $0$ (type-II functional response)
+    and $1$ (type-III functional response).
+    
+    Details on the default parameter values can be found in Table 
+    \ref{tab:parameters}. The trophic topology (values for which $a_{ij}>0$) is 
+    held constant.
+    
+    \begin{sidewaystable}[s]
+      \begin{tabular}{r | l | l}
+        Param.    & Comment                                               & Value  \\
+        \hline 
+        $r_i$     & Reproductive rate of species $i$                      & 1 for producers, 0 otherwise \\
+        $K_i$     & The carrying capacity of species $i$                  & 1 for all \\
+        $w_{ij}$  & The consumption rate of species $j$ by species $i$    & equal between all preys (e.g. 0.25 for grazers (4 preys)) \\
+        $F_{ij}$  & The functional response of species $i$ on $j$         & \\
+        $q$       & The hill coefficient in the functional response       & 0.5 \\
+        $e_{ji}$  & The conversion efficiency of species $i$ into $j$     & 0.85 for all $i$ and $j$ \\
+        $b_{i}$   & Body mass of species $i$                              & 1/10/20 \\
+        $x_i$     & The metabolic (mortality) rate                        & $x_i = 0.223 b_i^{-.25}$ \\
+        $a_{ij}$  & The attack rate of species $i$ on $j$                 & .5 for grazer/producer interactions and .75 for predator/grazer unless stated otherwise \\
+        $h_i$     & The handling time of species $i$                      & 1/(8*$x_i$) 
+      \end{tabular}
+      \caption{Default parameters and values used in the model. Some of them (e.g. $x_i$ use metabolic scaling relationships). }
+      \label{tab:parameters}
+    \end{sidewaystable}
+    
+    \subsection{Results}
+      \subsubsection{Example output}
+      
+        The simulation process is as follow: 
+        \begin{itemize}
+          \item Species initial biomasses are chosen randomly in the range 
+                $]0;K_i]$. 
+          \item The simulation is run until $t=3000$ is reached, when a species 
+                is removed. The run lasts until $t=5000$ is reached. 
+        \end{itemize}
+        
+        \afig{trophic_sample_output.png}{
+              Example output: in this simulation, species 5 (grazer) is removed 
+              at time $t=3000$.}{1}{!h}
+      
+      \subsubsection{Coexistence analysis}
+        We choose predefined values for attack rates and the result on 
+        coexistence of species. 
+        
+        \afig{extinction_diagram_trophiconly.png}{
+              Number of extinctions in each trophic level according to the 
+              attack rates. The stars indicate the default values chosen in the 
+              trophic model.}{1}{h}
+        
+      \subsubsection{Secondary extinctions}
+        
+        
+  \section{Full model}
+    All the parameters of the model here are fixed beforehand and do not depend
+    on the biomasses of species. The way non-trophic interactions are 
+    implemented is by introducing that dependance to species abundances.
+    
+    For example, let's consider species $i$, a producer: its logistic growth is 
+    controlled by its fixed carrying capacity $K$. However, species from upper 
+    trophic levels can \emph{create space}, and thus increase its value. We thus
+    need to introduce species-dependence in $K$.
+    
+    Instead of a fixed value $K$, we replace it by $K_{ij}$, where: 
+    
+    \begin{equation}
+      K_{ij} = \frac{ K_0 B_0 + K^{NT}_{ij} B_j }{ B_0 + B_j }
+    \end{equation}
+    
+    where $K^{NT}_{ij} = K_0 + \delta K_{ij}$. $\delta K_{ij}$ is thus the bonus 
+    (if positive), or penalty (if negative) species $i$ receives from species 
+    $j$. The values for $\delta K_{ij}$ thus constitute the non-trophic network
+    for parameter $K$.
+    
+    A species $i$ can interact with more than one species $j$: we need a rule to 
+    decide on how to combine them: a simple average over values of $j$ where 
+    $\delta K_{ij}>0$ will do the trick for now.
+    
+  \section*{TODO}
+    \begin{itemize}
+      \item Think about how to set body masses
+      \item Think about metabolic relationships
+      \item So far, parameters are chosen a bit arbitrarily: think about which 
+            ones should be free and which ones should be fixed.
+    \end{itemize}
+  
+  \newpage
+  \begin{footnotesize}
+    \printbibliography
+  \end{footnotesize}
+  
+\end{document}
