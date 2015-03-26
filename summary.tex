@@ -3,7 +3,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{textcomp}
 \usepackage{amsmath}
-
+% \usepackage{datetime} % for \date command
 \usepackage{rotating}
 
 \input{/home/alex/docs/resources/latex_include.tex}
@@ -32,10 +32,6 @@
   
   \maketitle 
   
-  The plan is to investigate the impact of non-trophic interactions on the 
-number of secondary extinctions. We thus define a trophic model of population 
-dynamics and then add non-trophic interactions. 
-    
   \section{The trophic model}
       
       \SCfig{trophic_topology.png}{
@@ -59,11 +55,16 @@ feeds on $j$:
     
     \begin{equation}
       F_{ij} = \frac{a_{ij} w_{ij} B_{j}^{q+1} }{ 
-        1 + h_{i} w_{ij} \sum_{k=preys} a_{ik} B_{k}^{q+1} }
+        1 + h_{i} w_{ij} \sum_{k} a_{ik} B_{k}^{q+1} }
     \end{equation}
     
-    where q is a coefficient taken randomly between $0$ (type-II functional 
-response) and $1$ (type-III functional response).
+    Parameters are described in Table \ref{tab:parameters}. In the functional 
+response, q is a coefficient taken randomly between $0$ (type-II functional 
+response) and $1$ (type-III functional response). 
+    
+    Many of these parameters can be chosen using metabolic scaling rules 
+yielding a model with few free parameters \footnote{Note that we need to think 
+about how closely we want to follow metabolic scaling rules [\today]}       .
     
     Details on the default parameter values can be found in Table 
 \ref{tab:parameters}. The trophic topology (values for which $a_{ij}>0$) is held 
@@ -74,14 +75,14 @@ constant.
         Param.    & Comment                                               & Value  \\
         \hline 
         $r_i$     & Reproductive rate of species $i$                      & 1 for producers, 0 otherwise \\
-        $K_i$     & The carrying capacity of species $i$                  & 1 for all \\
+        $K_i$     & The carrying capacity of species $i$                  & 1 for all producers \\
         $w_{ij}$  & The consumption rate of species $j$ by species $i$    & equal between all preys (e.g. 0.25 for grazers (4 preys)) \\
         $F_{ij}$  & The functional response of species $i$ on $j$         & \\
-        $q$       & The hill coefficient in the functional response       & uniformly random between 0 and 1 \\
+        $q$       & The ``hill'' coefficient in the functional response   & random between 0 and 1 \\
         $e_{ji}$  & The conversion efficiency of species $i$ into $j$     & 0.85 for all $i$ and $j$ \\
-        $b_{i}$   & Body mass of species $i$                              & 1/10/20 \\
-        $x_i$     & The metabolic (mortality) rate                        & $x_i = 0.223 b_i^{-.25}$ \\
-        $a_{ij}$  & The attack rate of species $i$ on $j$                 & .5 for grazer/producer interactions and .75 for predator/grazer unless stated otherwise \\
+        $b_{i}$   & \textbf{Body mass of species $i$}                     & producers: 1, grazers: 3 predators: 6 \\
+        $x_i$     & The metabolic (mortality) rate                        & scaling rule with body size $x_i = 0.223 b_i^{-.25}$ \\
+        $a_{ij}$  & The attack rate of species $i$ on $j$                 & scaling rule with \\
         $h_i$     & The handling time of species $i$                      & 1/(8*$x_i$) 
       \end{tabular}
       \caption{Default parameters and values used in the model. Some of them 
@@ -101,8 +102,9 @@ constant.
         \end{itemize}
         
         \afig{trophic_sample_output.png}{100 replicates. sp1-4 are producers, 
-sp5-6 are intermediate consumers and sp7-8 are top predators.In this simulation, 
-species 5 (grazer) is removed at time $t=3000$.}{1}{!h}
+sp5-6 are intermediate consumers and sp7-8 are top predators. In this 
+simulation, species 5 (grazer) is removed at time $t=3000$. Mind the non-linear 
+vertical scale}{1}{!h}
   
   \section{An example of non-trophic interaction}
     All the parameters of the model here are fixed beforehand and do not depend 
@@ -112,7 +114,7 @@ introducing that dependence on species abundances.
     For example, let's consider species $i$, a producer: its logistic growth is 
 controlled by its fixed carrying capacity $K$. However, let's consider that some 
 species from upper trophic levels create new space for algaes to grow on, thus 
-increase its value (e.g. mussels/microalgae). 
+increase its value (e.g. mussels/propagules). 
     
     Instead of a fixed value $K$ in Eq. \ref{eq:popdyn}, we replace it by 
 $K_{i}$ that depends on interactions with other species: 
@@ -126,18 +128,26 @@ on parameter $K$ that species $i$ receives from species $j$.
     
     \afig{ntrophic_sample_output.png}{Example output for 100 simulations, where 
 the carrying capacity $K$ of producers (sp1-4) depend on the abundance of 
-species 5. in this simulation, species 5 (grazer) is removed at time 
-$t=3000$.}{1}{!h}
+species 5 i.e. $\delta K_{5(1,2,3,4)}$ is set to $0.3$. In this simulation, species 
+5 (grazer) is removed at time $t=3000$. Notice the higher drop in predators 
+abundances (sp7-8) compared to \ref{fig:trophic_sample_output.png}, and the 
+absence of secondary extinctions.}{1}{!h}
   
-  \section{Generalization of NTIs}
+  \section{``Generalization`` of NTIs}
+    This approach can be generalized to any parameter $p$: however, not all 
+parameters can be changed in a way that makes sense. For example, the 
+grazers and predators have no $K$ thus the above example is not easily 
+generalizable.
     
-    
-    
+    A possibility would be to introduce a generic coefficient of bonus/penalty 
+in trophic interactions, on $w_{ij}$ for instance. 
+  
   \newpage
   \section*{TODO}
     \begin{itemize}
+      \item Why are top predators not identical ? due to different initial ab
       \item Think about how to set body masses
-      \item Think about metabolic relationships
+      \item Check and think about metabolic relationships
       \item So far, parameters are chosen a bit arbitrarily: think about which 
             ones should be free and which ones should be fixed.
     \end{itemize}

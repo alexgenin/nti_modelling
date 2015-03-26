@@ -38,7 +38,8 @@ document()
 # 2 top predators
 # 
 
-for (file in list.files(paste0(oldpwd,"/R"), full.names=TRUE)) 
+for (file in list.files(paste0(oldpwd,"/R"), full.names=TRUE)) {
+  message("Sourcing", file)
   source(file)
-
+}
 setwd(oldpwd)
