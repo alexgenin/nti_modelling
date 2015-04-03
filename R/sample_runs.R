@@ -4,33 +4,30 @@ library(ggplot2)
 
 
 # Define one simulation 
-onesim <- function(sys) { 
-  
+one_simulation <- function(sys) { 
   sys %>% 
     alter_system(state=runif(get_size(sys),0,1)) %>% 
     alter_parms(q=runif(1,0,1)) %>% 
     run %>% 
-    insert_parms(q, dK[5,1]) # insert some param values as columns
+    insert_parms(q) # insert some param values as columns
 }
 
 # Run all simulations
-hundred_replicates <- . %>%
-    mrun(100, onesim, .progress='time') %>% 
-    zero_below(1e-5) %>%
-    adjust_names 
-
+hundred_replicates <- . %>% with_fcache(mrun)(100, one_simulation, 
+                                              .progress='time') %>% 
+                            zero_below(1e-5) 
 
 format <- . %>% select_ranges(initial=c(0, 300),
                               after_removal=c(2950, 3300)) %>%
+                adjust_names %>%
                 as.data.frame %>% 
-                gather(sp,ab,sp1:sp8) 
+                gather(sp, ab, sp1:sp8) 
 
 # Create base systems
 sys_withnti <- syspreset_rockyshore_nti(tmax=5000) %>% 
-                 set_remove(species=c(5,7), at=3000) %>%
+                 set_removal(species=5, at=3000) %>%
                  compile.system()
-sys_trophic <- sys_withnti %>% 
-                 alter_parms(dK=matrix(0, nrow=8, ncol=8)) 
+sys_trophic <- sys_withnti 
 
 # Adjust data and plot results
 sys_trophic %>% hundred_replicates %>% format -> dat

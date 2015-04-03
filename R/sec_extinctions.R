@@ -4,8 +4,8 @@ library(ggplot2)
 library(dplyr)
 
 # Create base systems
-sys_withnti <- syspreset_rockyshore_nti(tmax=10e3, 
-                                        removed_species=5) %>%
+sys_withnti <- syspreset_rockyshore_nti(tmax=10e3) %>%
+                 set_removal(species=5, at=3000) %>% 
                  compile.system()
 sys_trophic <- sys_withnti %>% 
                  alter_parms(dK=matrix(0, nrow=8, ncol=8)) # all dKs to 0 -> no nti
@@ -18,7 +18,7 @@ one_replicate <- . %>%
 
 # Run all simulations
 run_replicates <- . %>%
-  FC(mrun, ., 10, one_replicate, .progress='time', .parallel=parjob()) %>% 
+  with_fcache(mrun)(., 10, one_replicate, .progress='time', .parallel=parjob()) %>% 
   zero_below(1e-8) %>%
   adjust_names() %>% 
   select_ranges(before_removal = c(2699, 2999),

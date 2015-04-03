@@ -1,7 +1,7 @@
 
 # Define topology: who eats whom ?
 trophic_topology <- list(list(from=c(5,6), to=c(1,2,3,4)),
-                        list(from=c(7,8), to=c(5,6)))
+                         list(from=c(7,8), to=c(5,6)))
 trophic_topology <- gen_interaction_matrix(trophic_topology, 8)
 
 dat <- data.frame(species = c('ag1','ag2','ag3','ag4',

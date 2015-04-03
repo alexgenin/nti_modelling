@@ -7,7 +7,7 @@
 \usepackage{rotating}
 
 \input{/home/alex/docs/resources/latex_include.tex}
-\usepackage[french]{babel}
+\usepackage[english]{babel}
 
 \usepackage{geometry}
 \geometry{
@@ -39,36 +39,33 @@
         consumers. Species consume everyone on the lower trophic level.
         x-axis has no meaning.}{.6}
       
-      The dynamic model is inspired from Brose et al's (2006). It is given by 
-its main equation that describes the dynamics of one species' biomass: 
+      The node dynamics model is inspired from \autocite{Brose2006}. It is 
+given by its main equation that describes the dynamics of one species' biomass: 
     
     \begin{equation}
       \label{eq:popdyn}
-      \frac{dB_i}{dt} =   r_iB_i(1 - \frac{B_i}{K_i}) 
-                        + \sum_{i=1}^{i=N} B_i w_{ij} F_{ij} 
-                        - \sum_{j=1}^{i=N} B_j w_{ji} F_{ji} / e_{ji} 
-                        - x_i B_i 
+      \frac{dB_i}{dt} = \underbrace{rB_i(1 - \frac{B_i}{K_i})}_{logistic\ growth}
+                        \underbrace{+ \sum_{k=1}^{N} B_i w_{ik} e_{ik} F_{ik}}_{i\ eats}
+                        \underbrace{- \sum_{j=1}^{N} B_j w_{ji} F_{ji}}_{i\ gets\ eaten}
+                        \underbrace{- x_i B_i}_{mortality}
     \end{equation}
     
     where $F_{ij}$ describes a generic functional response in which species $i$ 
-feeds on $j$: 
+feeds on $j$ as followed: 
     
     \begin{equation}
       F_{ij} = \frac{a_{ij} w_{ij} B_{j}^{q+1} }{ 
-        1 + h_{i} w_{ij} \sum_{k} a_{ik} B_{k}^{q+1} }
+                       1 + h_{i} w_{ij} \sum_{k} a_{ik} B_{k}^{q+1} }
     \end{equation}
     
     Parameters are described in Table \ref{tab:parameters}. In the functional 
-response, q is a coefficient taken randomly between $0$ (type-II functional 
-response) and $1$ (type-III functional response). 
+response, q is a coefficient taken randomly in the $[0,1]$ range (a value of 0 
+yields a type-II functional and 1 a type-III functional response).
     
     Many of these parameters can be chosen using metabolic scaling rules 
-yielding a model with few free parameters \footnote{Note that we need to think 
-about how closely we want to follow metabolic scaling rules [\today]}       .
-    
-    Details on the default parameter values can be found in Table 
-\ref{tab:parameters}. The trophic topology (values for which $a_{ij}>0$) is held 
-constant.
+resulting in a plausible food web with few free parameters. Details on the 
+default parameter values can be found in Table \ref{tab:parameters}. The trophic 
+topology (values for which $a_{ij}>0$) is held constant.
     
     \begin{sidewaystable}[s]
       \begin{tabular}{r | l | l}
@@ -82,11 +79,10 @@ constant.
         $e_{ji}$  & The conversion efficiency of species $i$ into $j$     & 0.85 for all $i$ and $j$ \\
         $b_{i}$   & \textbf{Body mass of species $i$}                     & producers: 1, grazers: 3 predators: 6 \\
         $x_i$     & The metabolic (mortality) rate                        & scaling rule with body size $x_i = 0.223 b_i^{-.25}$ \\
-        $a_{ij}$  & The attack rate of species $i$ on $j$                 & scaling rule with \\
+        $a_{ij}$  & The attack rate of species $i$ on $j$                 & for species $i$ attacking $j$: $27.24 * x_{i} * exp(0.01 * b_{i}/b_{j})$ \\
         $h_i$     & The handling time of species $i$                      & 1/(8*$x_i$) 
       \end{tabular}
-      \caption{Default parameters and values used in the model. Some of them 
-(e.g. $x_i$ use metabolic scaling relationships). }
+      \caption{Default parameters and values used in the model. Some of them (e.g. $x_i$ use metabolic scaling relationships). }
       \label{tab:parameters}
     \end{sidewaystable}
     
@@ -97,8 +93,9 @@ constant.
         \begin{itemize}
           \item Species initial biomasses are chosen randomly in the range 
                 $]0;K_i]$, q is chosen randomly between $0$ and $1$.
-          \item The simulation is run until $t=3000$ is reached, when a species 
-                is removed. The run lasts until $t=5000$ is reached. 
+          \item The simulation is run until $t=3000$ is reached, when one or 
+                more species are removed. The run lasts until $t=5000$ is 
+                reached. 
         \end{itemize}
         
         \afig{trophic_sample_output.png}{100 replicates. sp1-4 are producers, 
@@ -128,28 +125,42 @@ on parameter $K$ that species $i$ receives from species $j$.
     
     \afig{ntrophic_sample_output.png}{Example output for 100 simulations, where 
 the carrying capacity $K$ of producers (sp1-4) depend on the abundance of 
-species 5 i.e. $\delta K_{5(1,2,3,4)}$ is set to $0.3$. In this simulation, species 
-5 (grazer) is removed at time $t=3000$. Notice the higher drop in predators 
-abundances (sp7-8) compared to \ref{fig:trophic_sample_output.png}, and the 
-absence of secondary extinctions.}{1}{!h}
+species 5 i.e. $\delta K_{5(1,2,3,4)}$ is set to $0.3$. In this simulation, 
+species 5 (grazer) is removed at time $t=3000$.}{1}{!h}
   
-  \section{``Generalization`` of NTIs}
-    This approach can be generalized to any parameter $p$: however, not all 
-parameters can be changed in a way that makes sense. For example, the 
-grazers and predators have no $K$ thus the above example is not easily 
-generalizable.
+  Note that these two examples produce no secondary extinctions.
+  
+  \section{Generalization of NTIs}
+    This approach can be used for any parameter. However, not all parameters can 
+be altered in a way that makes sense. For example, the grazers and predators 
+have no $K$ thus the above example is not easily generalizable to any pair of
+species.
     
     A possibility would be to introduce a generic coefficient of bonus/penalty 
-in trophic interactions, on $w_{ij}$ for instance. 
+in trophic interactions, on $w_{ij}$ for instance, or add a new term $N^t$ 
+representing a ``generic'' non-trophic interaction to the main equation: 
   
+  \begin{equation}
+    \label{eq:popdynt}
+      \frac{dB_i}{dt} =   r_iB_i(1 - \frac{B_i}{K_i}) 
+                        + \sum_{k=1}^{N} B_i w_{ik} e_{ik} F_{ik} 
+                        - \sum_{j=1}^{N} B_j w_{ji} F_{ji} 
+                        - x_i B_i 
+                        + \sum_{j} N^t_{ij} B_j
+  \end{equation}
+    
   \newpage
+  
   \section*{TODO}
     \begin{itemize}
-      \item Why are top predators not identical ? due to different initial ab
-      \item Think about how to set body masses
-      \item Check and think about metabolic relationships
-      \item So far, parameters are chosen a bit arbitrarily: think about which 
-            ones should be free and which ones should be fixed.
+      \item Why do top predators have different responses ? 
+      \item Think about how to set the body mass ratios between preys and 
+            predators.
+      \item Check and think about metabolic relationships (ectoterm/endotherm, 
+            that paper about metabolism of plants)
+      \item Think about which ones should be free and which ones should be 
+            fixed.
+      \item Think about the efficiency: rate of prey -> biomass or 
     \end{itemize}
   
   

@@ -107,3 +107,11 @@ sympy-plots-for-*.tex/
 
 # xindy
 *.xdy
+
+# More
+*.run.xml
+*.bcf
+*.bbl
+*.log
+*.out
+*.blg
