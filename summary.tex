@@ -45,8 +45,8 @@ given by its main equation that describes the dynamics of one species' biomass:
     \begin{equation}
       \label{eq:popdyn}
       \frac{dB_i}{dt} = \underbrace{rB_i(1 - \frac{B_i}{K_i})}_{logistic\ growth}
-                        \underbrace{+ \sum_{k=1}^{N} B_i w_{ik} e_{ik} F_{ik}}_{i\ eats}
-                        \underbrace{- \sum_{j=1}^{N} B_j w_{ji} F_{ji}}_{i\ gets\ eaten}
+                        \underbrace{+ \sum_{k=1}^{N} B_i w_{ik} F_{ik}}_{i\ eats}
+                        \underbrace{- \sum_{j=1}^{N} B_j w_{ji} F_{ji} / e_{ji}}_{i\ gets\ eaten}
                         \underbrace{- x_i B_i}_{mortality}
     \end{equation}
     
@@ -103,66 +103,37 @@ sp5-6 are intermediate consumers and sp7-8 are top predators. In this
 simulation, species 5 (grazer) is removed at time $t=3000$. Mind the non-linear 
 vertical scale}{1}{!h}
   
-  \section{An example of non-trophic interaction}
-    All the parameters of the model here are fixed beforehand and do not depend 
-on the biomasses of species. Non-trophic interactions can be implemented by 
-introducing that dependence on species abundances.
-    
-    For example, let's consider species $i$, a producer: its logistic growth is 
-controlled by its fixed carrying capacity $K$. However, let's consider that some 
-species from upper trophic levels create new space for algaes to grow on, thus 
-increase its value (e.g. mussels/propagules). 
-    
-    Instead of a fixed value $K$ in Eq. \ref{eq:popdyn}, we replace it by 
-$K_{i}$ that depends on interactions with other species: 
-    
-    \begin{equation}
-      K_{i} = \sum_{j=1|\delta K_{ij}\neq0}^{N} \frac{ K_0 B_0 + (K_0 + \delta K_{ij}) B_j }{ B_0 + B_j }
-    \end{equation}
-    
-    $\delta K_{ij}$ represents the bonus (if positive), or penalty (if negative) 
-on parameter $K$ that species $i$ receives from species $j$. 
-    
-    \afig{ntrophic_sample_output.png}{Example output for 100 simulations, where 
-the carrying capacity $K$ of producers (sp1-4) depend on the abundance of 
-species 5 i.e. $\delta K_{5(1,2,3,4)}$ is set to $0.3$. In this simulation, 
-species 5 (grazer) is removed at time $t=3000$.}{1}{!h}
-  
-  Note that these two examples produce no secondary extinctions.
-  
   \section{Generalization of NTIs}
-    This approach can be used for any parameter. However, not all parameters can 
-be altered in a way that makes sense. For example, the grazers and predators 
-have no $K$ thus the above example is not easily generalizable to any pair of
-species.
     
-    A possibility would be to introduce a generic coefficient of bonus/penalty 
-in trophic interactions, on $w_{ij}$ for instance, or add a new term $N^t$ 
-representing a ``generic'' non-trophic interaction to the main equation: 
-  
+    The introduction of a \emph{generic} non-trophic interaction can be done 
+by adding a term to the equation of a node (Eq. \ref{eq:popdyn}).
+    
   \begin{equation}
     \label{eq:popdynt}
-      \frac{dB_i}{dt} =   r_iB_i(1 - \frac{B_i}{K_i}) 
-                        + \sum_{k=1}^{N} B_i w_{ik} e_{ik} F_{ik} 
-                        - \sum_{j=1}^{N} B_j w_{ji} F_{ji} 
-                        - x_i B_i 
-                        + \sum_{j} N^t_{ij} B_j
+    \frac{dB_i}{dt} = rB_i(1 - \frac{B_i}{K_i})
+                      + \sum_{k=1}^{N} B_i w_{ik} F_{ik}
+                      - \sum_{j=1}^{N} B_j w_{ji} F_{ji} / e_{ji}
+                      - x_i B_i 
+                      + \underbrace{\sum_{j=1}^{N} N^t_{ij} B_j}_{non-trophic\ interactions}
   \end{equation}
     
+    Note that the non-trophic interaction is constrained to be always below the 
+``mortality'' rate ($- x_i B_i$) so that there is no creation of biomass from 
+non-trophic interactions.
+    
   \newpage
-  
-  \section*{TODO}
-    \begin{itemize}
-      \item Why do top predators have different responses ? 
-      \item Think about how to set the body mass ratios between preys and 
-            predators.
-      \item Check and think about metabolic relationships (ectoterm/endotherm, 
-            that paper about metabolism of plants)
-      \item Think about which ones should be free and which ones should be 
-            fixed.
-      \item Think about the efficiency: rate of prey -> biomass or 
-    \end{itemize}
-  
+%   
+%   \section*{TODO}
+%     \begin{itemize}
+%       \item Think about how to set the body mass ratios between preys and 
+%             predators.
+%       \item Check and think about metabolic relationships (ectoterm/endotherm, 
+%             that paper about metabolism of plants)
+%       \item Think about which ones should be free and which ones should be 
+%             fixed.
+%       \item Think about the efficiency: rate of prey -> biomass or 
+%     \end{itemize}
+%   
   
   \newpage
   \begin{footnotesize}
@@ -170,3 +141,4 @@ representing a ``generic'' non-trophic interaction to the main equation:
   \end{footnotesize}
   
 \end{document}
+
